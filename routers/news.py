@@ -38,14 +38,6 @@ async def get_news_list(
     offset = (page - 1) * page_size
     news_list = await news.get_news_list(db, category_id, offset, page_size)
 
-    # print()
-    # print(type(news_list))
-    # print()
-
-    # print()
-    # print(type(news_list[0]))
-    # print()
-
     # 获取新闻总数
     total = await news.get_news_count(db, category_id)
 
@@ -74,10 +66,6 @@ async def get_news_detail(
 
     if not news_detail:
         raise HTTPException(status_code=404, detail="新闻不存在")
-
-    # print()
-    # print(type(news_detail))
-    # print()
 
     views_res = await news.increase_news_views(db, news_detail.id)
 

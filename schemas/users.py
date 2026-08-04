@@ -1,3 +1,4 @@
+from ast import alias
 from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -43,3 +44,7 @@ class UserUpdateRequest(BaseModel):
     gender: Optional[str] = None
     bio: Optional[str] = None
     phone: Optional[str] = None
+
+class UserChangePasswordRequest(BaseModel):
+    old_password: str = Field(..., alias="oldPassword", description="旧密码")
+    new_password: str = Field(..., min_length=6, max_length=20, alias="newPassword", description="新密码")

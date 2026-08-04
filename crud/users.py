@@ -6,7 +6,7 @@ from sqlalchemy import select, delete, update
 import uuid
 
 from models.users import User, UserToken
-from schemas.users import UserRequest, UserUpdateRequest
+from schemas.users import UserRequest, UserUpdateRequest, UserChangePasswordRequest
 from utils.security import get_hash_password, verify_password
 
 
@@ -107,27 +107,27 @@ async def get_user_by_token(
     return result.scalar_one_or_none()
 
 
-async def delete_user(
-        username: str,
-        db: AsyncSession
-):
-    # 获取要删除的用户
-    stmt = select(User).where(User.username == username)
-    result = await db.execute(stmt)
-    user = result.scalar_one_or_none()
+# async def delete_user(
+#         username: str,
+#         db: AsyncSession
+# ):
+#     # 获取要删除的用户
+#     stmt = select(User).where(User.username == username)
+#     result = await db.execute(stmt)
+#     user = result.scalar_one_or_none()
 
-    if not user:
-        return None
+#     if not user:
+#         return None
 
-    # 删除用户
-    stmt = select(UserToken).where(UserToken.user_id == user.id)
-    result = await db.execute(stmt)
-    user_token = result.scalar_one_or_none()
+#     # 删除用户
+#     stmt = select(UserToken).where(UserToken.user_id == user.id)
+#     result = await db.execute(stmt)
+#     user_token = result.scalar_one_or_none()
 
-    await db.delete(user)
-    await db.delete(user_token)
+#     await db.delete(user)
+#     await db.delete(user_token)
 
-    return user
+#     return user
 
 
 # 更新用户信息
@@ -148,3 +148,19 @@ async def update_user(db: AsyncSession, user_data: UserUpdateRequest, username: 
     updated_user = await get_user_by_username(db, username)
 
     return updated_user
+
+
+# 修改密码
+async def change_password(db: AsyncSession, user: User, old_password: str, new_password: str):
+    if not verify_password(old_password, user.password):
+        return False
+
+    hashed_new_pwd = get_hash_password(new_password)
+    user.password = hashed_new_pwd
+
+    # 由 sqlalchemy 真正接管这个 User 对象
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    return True
