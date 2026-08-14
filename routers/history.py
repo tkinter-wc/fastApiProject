@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_conf import get_database
 from crud import history
-from crud.history import list_news_history
+from crud.history import list_news_history, remove_news_history, clear_news_history
 from models.users import User
 from schemas.history import HistoryAddRequest, HistoryListResponse
 from utils.logger import logger
@@ -52,3 +52,27 @@ async def list_history(
     )
 
     return success_response(message="获取历史记录成功", data=data)
+
+
+@router.delete("/delete/{news_id}")
+async def remove_history(
+        news_id: int,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_database)
+):
+    remove_result = await remove_news_history(news_id, user.id, db)
+
+    if not remove_result:
+        return success_response(message="历史记录不存在")
+
+    return success_response(message="删除历史记录成功")
+
+
+@router.delete("/clear")
+async def clear_history(
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_database)
+):
+    clear_result = await clear_news_history(user.id, db)
+
+    return success_response(message=f"成功清空{clear_result}条历史记录")
