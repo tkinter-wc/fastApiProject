@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_conf import get_database
 from crud import news
+from crud import news_cache
 
 # 创建 APIRouter 实例
 router = APIRouter(prefix="/api/news", tags=["news"])
@@ -18,7 +19,7 @@ async def get_categories(
         skip: int = 0,
         limit: int = 100
 ):
-    categories = await news.get_categories(db, skip, limit)
+    categories = await news_cache.get_categories(db, skip, limit)
 
     return {
         "code": 200,
@@ -36,7 +37,7 @@ async def get_news_list(
 ):
     # 获取新闻列表
     offset = (page - 1) * page_size
-    news_list = await news.get_news_list(db, category_id, offset, page_size)
+    news_list = await news_cache.get_news_list(db, category_id, offset, page_size)
 
     # 获取新闻总数
     total = await news.get_news_count(db, category_id)
