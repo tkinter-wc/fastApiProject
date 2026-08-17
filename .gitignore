@@ -7,3 +7,6 @@ __pycache__/
 
 # HTTP test files
 test_main.http
+
+# 本地测试 / 练手
+ceshi/

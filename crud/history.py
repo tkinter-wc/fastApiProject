@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.history import History
 from models.news import News
+from utils.logger import logger
 
 
 async def add_news_history(
@@ -16,6 +17,12 @@ async def add_news_history(
     stmt = select(History).where(History.user_id == user_id, History.news_id == news_id)
     result = await db.execute(stmt)
     history = result.scalars().first()
+
+    logger.info(f"检查历史记录的语句：{stmt}")
+    logger.info(f"检查历史记录的语句类型：{type(stmt)}\n")
+
+    logger.info(f"检查历史记录的结果：{history}")
+    logger.info(f"检查历史记录的结果类型：{type(history)}\n")
 
     # 若存在，则更新浏览时间后返回
     if history:
