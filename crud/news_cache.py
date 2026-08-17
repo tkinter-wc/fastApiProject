@@ -5,9 +5,10 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from cache.news_cache import get_cached_categories, set_cached_categories, get_cache_news_list, set_cache_news_list
+from cache.news_cache import get_cached_categories, set_cached_categories, get_cache_news_list, set_cache_news_list, get_cache_news_detail, set_cache_news_detail
 from models.news import Category, News
 from schemas.base import NewsItemBase
+from utils.logger import logger
 
 
 async def get_categories(
@@ -24,9 +25,14 @@ async def get_categories(
     result = await db.execute(stmt)
     categories = result.scalars().all()  # 是orm对象
 
+    logger.info(f"获取分类数据：{categories}\n")
+
     # 写入缓存
     if categories:
         categories = jsonable_encoder(categories)
+
+        logger.info(f"转化为json的分类数据：{categories}\n")
+
         await set_cached_categories(categories)
 
     return categories
@@ -49,11 +55,15 @@ async def get_news_list(
     result = await db.execute(stmt)
     news_list = result.scalars().all()
 
+    logger.info(f"获取新闻列表：{news_list}\n")
+
     # 将新闻列表写入缓存
     if news_list:
         # 先把 ORM 数据转换为 字典才能写入缓存
         # ORM 转成 pydantic，再转成字典
         news_data = [NewsItemBase.model_validate(item).model_dump(mode="json", by_alias=False) for item in news_list]
+
+        logger.info(f"转化为json的新闻数据：{news_data}\n")
 
         await set_cache_news_list(category_id, page, limit, news_data)
 
@@ -68,11 +78,6 @@ async def get_news_count(
     result = await db.execute(stmt)
 
     cot = result.scalar_one()
-    # cot = result.scalar()
-
-    # print()
-    # print(type(cot))
-    # print()
 
     return cot  # scalar_one() 只有一个结果，否则报错，当然这里用scalar()也可以
 
@@ -80,18 +85,42 @@ async def get_news_count(
 async def get_news_detail(
         db: AsyncSession,
         news_id: int):
+    # 尝试从缓存中获取新闻详情
+    cached_detail = await get_cache_news_detail(news_id)
+    if cached_detail:
+        return News(**cached_detail)
+
+    # 如果缓存中没有，则从数据库中查询  
     stmt = select(News).where(News.id == news_id)
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    news_detail = result.scalar_one_or_none()
+
+    logger.info(f"获取新闻详情：{news_detail}\n")
+
+    # 将新闻详情写入缓存
+    if news_detail:
+        news_data = NewsItemBase.model_validate(news_detail).model_dump(mode="json", by_alias=False)
+
+        logger.info(f"转化为json的新闻数据：{news_data}\n")
+
+        await set_cache_news_detail(news_id, news_data)
+    return news_detail
 
 
 async def increase_news_views(
         db: AsyncSession,
         news_id: int):
+    # 更新 mysql 的 view
     stmt = update(News).where(News.id == news_id).values(views=News.views + 1)
 
     result = await db.execute(stmt)
     await db.commit()  # 更新完立刻提交到数据库
+
+    # 更新 redis 的 view
+    cached_detail = await get_cache_news_detail(news_id)
+    if cached_detail:
+        cached_detail["views"] = cached_detail.get("views", 0) + 1
+        await set_cache_news_detail(news_id, cached_detail)
 
     # 更新之后，检查数据库是否真的命中了数据, 命中返回True，未命中返回False
     return result.rowcount > 0

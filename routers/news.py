@@ -63,12 +63,12 @@ async def get_news_detail(
         limit: int = Query(5, alias="limit", le=10)
 ):
     # 获取新闻详情 + 增加浏览量 + 相关新闻
-    news_detail = await news.get_news_detail(db, news_id)
+    news_detail = await news_cache.get_news_detail(db, news_id)
 
     if not news_detail:
         raise HTTPException(status_code=404, detail="新闻不存在")
 
-    views_res = await news.increase_news_views(db, news_detail.id)
+    views_res = await news_cache.increase_news_views(db, news_detail.id)
 
     if not views_res:
         raise HTTPException(status_code=500, detail="增加浏览量失败，新闻不存在")

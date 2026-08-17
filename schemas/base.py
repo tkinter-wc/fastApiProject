@@ -8,6 +8,7 @@ class NewsItemBase(BaseModel):
     id: int
     title: str
     description: Optional[str] = None
+    content: Optional[str] = None
     image: Optional[str] = None
     author: Optional[str] = None
     category_id: int = Field(alias="categoryId")

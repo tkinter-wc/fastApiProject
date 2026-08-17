@@ -6,6 +6,7 @@ from config.cache_conf import get_json_cache, set_cache
 
 CATEGORIES_KEY = "news:categories"
 NEWS_LIST_PREFIX = "news_list"
+NEWS_DETAIL_PREFIX = "news_detail"
 
 
 # 获取新闻分类缓存
@@ -26,7 +27,7 @@ async def set_cache_news_list(
         news_list: List[Dict[str, Any]],
         expire: int = settings.NEWS_LIST_CACHE_EXPIRE,
 ):
-    category_part = category_id if category_id is not None else "all"
+    category_part = category_id if category_id is not None else "others"
 
     key = f"{NEWS_LIST_PREFIX}:{category_part}:{page}:{size}"
     return await set_cache(key, news_list, expire)
@@ -34,7 +35,19 @@ async def set_cache_news_list(
 
 # 读取缓存-新闻列表
 async def get_cache_news_list(category_id: Optional[int], page: int, size: int):
-    category_part = category_id if category_id is not None else "all"
+    category_part = category_id if category_id is not None else "others"
 
     key = f"{NEWS_LIST_PREFIX}:{category_part}:{page}:{size}"
+    return await get_json_cache(key)
+
+
+# 写入缓存-新闻详情
+async def set_cache_news_detail(news_id: int, news_detail: Dict[str, Any], expire: int = settings.NEWS_DETAIL_CACHE_EXPIRE):
+    key = f"{NEWS_DETAIL_PREFIX}:{news_id}"
+    return await set_cache(key, news_detail, expire)
+
+
+# 读取缓存-新闻详情
+async def get_cache_news_detail(news_id: int):
+    key = f"{NEWS_DETAIL_PREFIX}:{news_id}"
     return await get_json_cache(key)
