@@ -3,20 +3,16 @@ from typing import Any
 
 import redis.asyncio as redis
 
+from config import settings
 from utils.logger import logger
-
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
-PASSWORD = "1234"
 
 # 创建 Redis 客户端
 redis_client = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=REDIS_DB,
-    password=PASSWORD,
-    decode_responses=True
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    db=settings.REDIS_DB,
+    password=settings.REDIS_PASSWORD,
+    decode_responses=settings.REDIS_DECODE_RESPONSES,
 )
 
 

@@ -4,15 +4,16 @@
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-# 数据库URL
-ASYNC_DATABASE_URL = "mysql+aiomysql://root:root@localhost:3306/news_app?charset=utf8mb4"
+from config import settings
 
 # 创建异步引擎
 async_engine = create_async_engine(
-    ASYNC_DATABASE_URL,
-    echo=True,  # 打印执行的sql语句
-    pool_size=10,  # 持久连接上限
-    max_overflow=20  # 最多额外连接上限
+    settings.DATABASE_URL,
+    echo=settings.DB_ECHO,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
+    pool_recycle=settings.DB_POOL_RECYCLE,
+    pool_pre_ping=settings.DB_POOL_PRE_PING,
 )
 
 # 创建会话工厂

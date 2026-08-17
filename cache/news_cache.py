@@ -1,6 +1,7 @@
 # 新闻相关的缓存方法：新闻分类的读取和写入
 from typing import List, Dict, Any, Optional
 
+from config import settings
 from config.cache_conf import get_json_cache, set_cache
 
 CATEGORIES_KEY = "news:categories"
@@ -13,12 +14,18 @@ async def get_cached_categories():
 
 
 # 写入新闻分类缓存
-async def set_cached_categories(data: List[Dict[str, Any]], expire: int = 7200):
+async def set_cached_categories(data: List[Dict[str, Any]], expire: int = settings.CATEGORIES_CACHE_EXPIRE):
     return await set_cache(CATEGORIES_KEY, data, expire)
 
 
 # 写入缓存-新闻列表
-async def set_cache_news_list(category_id: Optional[int], page: int, size: int, news_list: List[Dict[str, Any]], expire: int = 1800):
+async def set_cache_news_list(
+        category_id: Optional[int],
+        page: int,
+        size: int,
+        news_list: List[Dict[str, Any]],
+        expire: int = settings.NEWS_LIST_CACHE_EXPIRE,
+):
     category_part = category_id if category_id is not None else "all"
 
     key = f"{NEWS_LIST_PREFIX}:{category_part}:{page}:{size}"
