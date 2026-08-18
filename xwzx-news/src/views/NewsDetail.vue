@@ -152,7 +152,7 @@ onMounted(async () => {
     // historyStore.addHistory(newsStore.newsDetail);
   }
   
-  // 加载收藏数据
+  // 仅加载当前用户的本地收藏，避免串到上一个账号
   favoriteStore.loadFavorites()
   
   // 检查文章收藏状态

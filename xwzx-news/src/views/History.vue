@@ -130,14 +130,13 @@ onMounted(async () => {
     const result = await historyStore.getHistoryListApi();
     console.log('浏览历史页面：API获取结果', result);
     
-    // 如果API请求失败或用户未登录，则从本地加载
+    // 接口失败时不要回退到上一个用户的本地缓存
     if (!result || !result.success) {
-      historyStore.loadHistory();
+      historyStore.history = [];
     }
   } catch (error) {
     console.error('浏览历史页面：API请求异常', error);
-    // 出错时从本地加载
-    historyStore.loadHistory();
+    historyStore.history = [];
   }
 });
 </script>

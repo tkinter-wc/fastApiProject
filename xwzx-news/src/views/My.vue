@@ -116,6 +116,9 @@ const handleLogout = () => {
   }).then((action) => {
     if (action === 'confirm') {
       userStore.logout();
+      import('../store/resetAccountCaches').then(({ resetAccountCaches }) => {
+        resetAccountCaches();
+      });
       router.push('/login');
     }
   });

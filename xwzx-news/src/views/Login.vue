@@ -81,6 +81,8 @@ const onSubmit = async (values) => {
     });
     
     if (result.success) {
+      const { resetAccountCaches } = await import('../store/resetAccountCaches');
+      resetAccountCaches();
       showToast({
         type: 'success',
         message: result.message

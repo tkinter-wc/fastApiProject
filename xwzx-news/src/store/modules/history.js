@@ -3,6 +3,14 @@ import axios from 'axios';
 import { useUserStore } from '../user';
 import { apiConfig } from '../../config/api';
 
+const LEGACY_HISTORY_KEY = 'news_history';
+
+function historyStorageKey() {
+  const userStore = useUserStore();
+  const userId = userStore.userInfo?.id;
+  return userId ? `news_history_${userId}` : null;
+}
+
 export const useHistoryStore = defineStore('history', {
   state: () => ({
     history: [],
@@ -148,17 +156,27 @@ export const useHistoryStore = defineStore('history', {
       }
     },
     
-    // 保存到本地存储
+    resetForAccountSwitch() {
+      this.history = [];
+      localStorage.removeItem(LEGACY_HISTORY_KEY);
+    },
+
+    // 保存到本地存储（按用户隔离）
     saveHistory() {
-      localStorage.setItem('news_history', JSON.stringify(this.history));
+      const key = historyStorageKey();
+      if (!key) return;
+      localStorage.setItem(key, JSON.stringify(this.history));
     },
     
-    // 从本地存储加载
+    // 从本地存储加载（仅当前登录用户）
     loadHistory() {
-      const savedHistory = localStorage.getItem('news_history');
-      if (savedHistory) {
-        this.history = JSON.parse(savedHistory);
+      const key = historyStorageKey();
+      if (!key) {
+        this.history = [];
+        return;
       }
+      const savedHistory = localStorage.getItem(key);
+      this.history = savedHistory ? JSON.parse(savedHistory) : [];
     },
     
     // 获取浏览历史 - API请求

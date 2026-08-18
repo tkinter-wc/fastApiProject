@@ -11,7 +11,9 @@ export const useNewsStore = defineStore('news', {
     loading: false,
     refreshing: false,
     finished: false,
-    categoriesLoading: false
+    categoriesLoading: false,
+    page: 1,
+    fetching: false,
   }),
   
   actions: {
@@ -53,71 +55,70 @@ export const useNewsStore = defineStore('news', {
     
     // 切换新闻分类
     changeCategory(categoryId) {
+      if (this.currentCategory === categoryId && this.newsList.length) {
+        return
+      }
       this.currentCategory = categoryId
       this.newsList = []
       this.finished = false
-      this.getNewsList()
+      this.page = 1
+      this.getNewsList(true)
     },
     
     // 获取新闻列表
     async getNewsList(isRefresh = false) {
+      if (this.fetching) return
+      if (this.finished && !isRefresh) {
+        this.loading = false
+        return
+      }
+
       if (isRefresh) {
         this.refreshing = true
         this.newsList = []
         this.finished = false
+        this.page = 1
       }
-      
+
+      this.fetching = true
       this.loading = true
-      
+      const page = this.page
+      const pageSize = 10
+
       try {
-        // 使用API请求获取新闻列表
         const params = {
           categoryId: this.currentCategory,
-          page: isRefresh ? 1 : Math.ceil(this.newsList.length / 10) + 1,
-          pageSize: 10
+          page,
+          pageSize
         }
-        
-        // 在开发环境中，直接使用模拟数据
-        // console.log('使用模拟新闻列表数据');
-        
-        // 生成模拟数据
-        // const mockData = Array.from({ length: 10 }, (_, index) => ({
-        //   id: isRefresh ? index + 1 : this.newsList.length + index + 1,
-        //   title: `${this.getCategoryName(this.currentCategory)}新闻${isRefresh ? index + 1 : this.newsList.length + index + 1}`,
-        //   description: `这是一条关于${this.getCategoryName(this.currentCategory)}的新闻简介，包含了新闻的主要内容和亮点。`,
-        //   image: `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/200/200`,
-        //   author: '新闻资讯',
-        //   publishTime: new Date().toLocaleString(),
-        //   categoryId: this.currentCategory,
-        //   views: Math.floor(Math.random() * 10000)
-        // }))
-        
-        // this.newsList = isRefresh ? mockData : [...this.newsList, ...mockData]
-        
-        // 模拟数据加载完成的逻辑
-        // if (this.newsList.length >= 30) {
-        //   this.finished = true
-        // }
-        
- 
-        // 实际项目中连接后端API的代码，暂时注释掉
+
         const response = await axios.get(`${apiConfig.baseURL}/api/news/list`, { params });
-        
+
         if (response.data && response.data.code === 200) {
-          const newsData = response.data.data.list;
-          
-          // 更新新闻列表
-          this.newsList = isRefresh ? newsData : [...this.newsList, ...newsData];
-          
-          // 判断是否加载完成
-          if (newsData.length < params.pageSize) {
+          const newsData = response.data.data.list || [];
+          const hasMore = response.data.data.hasMore;
+
+          if (isRefresh) {
+            this.newsList = newsData;
+          } else {
+            const existIds = new Set(this.newsList.map(item => item.id));
+            this.newsList = [
+              ...this.newsList,
+              ...newsData.filter(item => !existIds.has(item.id))
+            ];
+          }
+
+          if (hasMore === false || newsData.length < pageSize) {
             this.finished = true;
+          } else {
+            this.page = page + 1;
           }
         }
 
       } catch (error) {
         console.error('获取新闻列表失败:', error)
       } finally {
+        this.fetching = false
         this.loading = false
         this.refreshing = false
       }
@@ -227,17 +228,7 @@ export const useNewsStore = defineStore('news', {
 //         console.error('获取新闻详情失败:', error)
 //       }
 //     },
-},
-    // 切换新闻分类
-    changeCategory(categoryId) {
-      if (this.currentCategory !== categoryId) {
-        this.currentCategory = categoryId
-        this.newsList = []
-        this.finished = false
-        this.getNewsList(true)
-      }
     },
-    
     // 获取分类名称
     getCategoryName(categoryId) {
       const category = this.categories.find(item => item.id === categoryId)

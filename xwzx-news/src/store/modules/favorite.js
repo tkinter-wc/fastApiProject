@@ -3,6 +3,14 @@ import axios from 'axios';
 import { useUserStore } from '../user';
 import { apiConfig } from '../../config/api';
 
+const LEGACY_FAVORITE_KEY = 'news_favorites';
+
+function favoriteStorageKey() {
+  const userStore = useUserStore();
+  const userId = userStore.userInfo?.id;
+  return userId ? `news_favorites_${userId}` : null;
+}
+
 export const useFavoriteStore = defineStore('favorite', {
   state: () => ({
     favorites: [],
@@ -213,17 +221,27 @@ export const useFavoriteStore = defineStore('favorite', {
       }
     },
     
-    // 保存到本地存储
+    resetForAccountSwitch() {
+      this.favorites = [];
+      localStorage.removeItem(LEGACY_FAVORITE_KEY);
+    },
+
+    // 保存到本地存储（按用户隔离）
     saveFavorites() {
-      localStorage.setItem('news_favorites', JSON.stringify(this.favorites));
+      const key = favoriteStorageKey();
+      if (!key) return;
+      localStorage.setItem(key, JSON.stringify(this.favorites));
     },
     
-    // 从本地存储加载
+    // 从本地存储加载（仅当前登录用户）
     loadFavorites() {
-      const savedFavorites = localStorage.getItem('news_favorites');
-      if (savedFavorites) {
-        this.favorites = JSON.parse(savedFavorites);
+      const key = favoriteStorageKey();
+      if (!key) {
+        this.favorites = [];
+        return;
       }
+      const savedFavorites = localStorage.getItem(key);
+      this.favorites = savedFavorites ? JSON.parse(savedFavorites) : [];
     },
     
     // 获取收藏列表 - API请求

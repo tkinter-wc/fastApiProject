@@ -76,16 +76,8 @@ watch(
 )
 
 onMounted(() => {
-  // 获取新闻分类
-  newsStore.getCategories().then(() => {
-    // 获取新闻列表
-    newsStore.getNewsList()
-  })
-  
-  // 初始化位置
+  newsStore.getCategories()
   setTimeout(updateTabsPosition, 300)
-  
-  // 添加滚动事件监听
   window.addEventListener('scroll', handleScroll)
 })
 
@@ -163,17 +155,6 @@ const handleScroll = () => {
   updateTabsPosition()
 }
 
-onMounted(() => {
-  newsStore.getNewsList()
-  
-  // 初始化位置
-  setTimeout(updateTabsPosition, 300)
-  
-  // 添加滚动事件监听
-  window.addEventListener('scroll', handleScroll)
-})
-
-// 组件销毁前移除事件监听
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })

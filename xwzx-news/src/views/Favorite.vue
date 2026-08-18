@@ -109,12 +109,10 @@ onMounted(async () => {
 
     const result = await favoriteStore.getFavoriteListApi();
     if (!result || !result.success) {
-      // 如果API请求失败，回退到本地存储
-      // favoriteStore.loadFavorites();
-      console.log('从本地存储加载收藏列表');  
+      favoriteStore.favorites = [];
     }
   } catch (error) {
-    favoriteStore.loadFavorites();
+    favoriteStore.favorites = [];
   }
 });
 </script>
