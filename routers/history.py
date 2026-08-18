@@ -36,14 +36,14 @@ async def list_history(
     logger.info(f"数据库查询出的结果是：{result}")
     logger.info(f"数据库查询出的结果类型：{type(result)}\n")
 
-    logger.info(f"数据库查询出的结果中News：{result[0][0]}")
-    logger.info(f"数据库查询出的结果中News类型：{type(result[0][0])}\n")
+    logger.info(f"数据库查询出的结果中第一个News：{result[0][0]}")
+    logger.info(f"数据库查询出的结果中第一个News类型：{type(result[0][0])}\n")
 
-    logger.info(f"数据库查询出的结果中HistoryId：{result[0][1]}")
-    logger.info(f"数据库查询出的结果中HistoryId类型：{type(result[0][1])}\n")
+    logger.info(f"数据库查询出的结果中第一个HistoryId：{result[0][1]}")
+    logger.info(f"数据库查询出的结果中第一个HistoryId类型：{type(result[0][1])}\n")
 
-    logger.info(f"数据库查询出的结果中ViewTime：{result[0][2]}")
-    logger.info(f"数据库查询出的结果中ViewTime类型：{type(result[0][2])}\n")
+    logger.info(f"数据库查询出的结果中第一个ViewTime：{result[0][2]}")
+    logger.info(f"数据库查询出的结果中第一个ViewTime类型：{type(result[0][2])}\n")
 
     history_list = [{
         **news.__dict__,
