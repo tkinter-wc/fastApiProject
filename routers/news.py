@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_conf import get_database
-from crud import news
 from crud import news_cache
 
 # 创建 APIRouter 实例
@@ -40,7 +39,7 @@ async def get_news_list(
     news_list = await news_cache.get_news_list(db, category_id, offset, page_size)
 
     # 获取新闻总数
-    total = await news.get_news_count(db, category_id)
+    total = await news_cache.get_news_count(db, category_id)
 
     # 计算是否有更多
     has_more = total > (offset + len(news_list))
@@ -62,7 +61,7 @@ async def get_news_detail(
         db: AsyncSession = Depends(get_database),
         limit: int = Query(5, alias="limit", le=10)
 ):
-    # 获取新闻详情 + 增加浏览量 + 相关新闻
+    # 先取详情：不存在直接 404，再增加浏览量（方案 B）
     news_detail = await news_cache.get_news_detail(db, news_id)
 
     if not news_detail:
@@ -71,9 +70,9 @@ async def get_news_detail(
     views_res = await news_cache.increase_news_views(db, news_detail.id)
 
     if not views_res:
-        raise HTTPException(status_code=500, detail="增加浏览量失败，新闻不存在")
+        raise HTTPException(status_code=500, detail="增加浏览量失败")
 
-    related_news = await news.get_related_news(db, news_detail.id, news_detail.category_id, limit)
+    related_news = await news_cache.get_related_news(db, news_detail.id, news_detail.category_id, limit)
 
     return {
         "code": 200,
@@ -86,7 +85,7 @@ async def get_news_detail(
             "author": news_detail.author,
             "publishTime": news_detail.publish_time,
             "categoryId": news_detail.category_id,
-            "views": news_detail.views,
+            "views": news_detail.views + 1,
             "relatedNews": related_news
         }
     }

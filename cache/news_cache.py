@@ -2,7 +2,7 @@
 from typing import List, Dict, Any, Optional
 
 from config import settings
-from config.cache_conf import get_json_cache, set_cache
+from config.cache_conf import get_json_cache, set_cache, delete_cache
 
 CATEGORIES_KEY = "news:categories"
 NEWS_LIST_PREFIX = "news_list"
@@ -51,3 +51,33 @@ async def set_cache_news_detail(news_id: int, news_detail: Dict[str, Any], expir
 async def get_cache_news_detail(news_id: int):
     key = f"{NEWS_DETAIL_PREFIX}:{news_id}"
     return await get_json_cache(key)
+
+
+# 写入缓存-新闻数量
+async def set_cache_news_count(category_id: Optional[int], count: int, expire: int = settings.NEWS_COUNT_CACHE_EXPIRE):
+    key = f"{CATEGORIES_KEY}:{category_id}:count"
+    return await set_cache(key, count, expire)
+
+
+# 读取缓存-新闻数量
+async def get_cache_news_count(category_id: Optional[int]):
+    key = f"{CATEGORIES_KEY}:{category_id}:count"
+    return await get_json_cache(key)
+
+
+# 写入缓存-相关新闻
+async def set_cache_related_news(news_id: int, related_news: List[Dict[str, Any]], expire: int = settings.RELATED_NEWS_CACHE_EXPIRE):
+    key = f"{NEWS_DETAIL_PREFIX}:{news_id}:related_news"
+    return await set_cache(key, related_news, expire)
+
+
+# 读取缓存-相关新闻
+async def get_cache_related_news(news_id: int):
+    key = f"{NEWS_DETAIL_PREFIX}:{news_id}:related_news"
+    return await get_json_cache(key)
+
+
+# 删除缓存-相关新闻
+async def delete_cache_related_news(news_id: int):
+    key = f"{NEWS_DETAIL_PREFIX}:{news_id}:related_news"
+    return await delete_cache(key)
